@@ -1,4 +1,6 @@
-﻿export default [
+﻿import component from "@/locales/en-US/component";
+
+export default [
 	{
 		path: '/user',
 		layout: false,
@@ -36,6 +38,43 @@
 		component: './Bai2/Bai2',
 		icon: 'ArrowsAltOutlined',
 	},
+	{
+		path: '/quan-ly',
+		name: 'Bài 2',
+		icon: 'UnorderedListOutlined',
+		routes: [
+		  {
+			path: '/quan-ly/mon-hoc',
+			name: 'Quản lý môn học',
+			component: './MonHoc/MonHoc',
+		  },
+		//   {
+		// 	path: '/quan-ly/cau-hoi',
+		// 	name: 'Quản lý câu hỏi ',
+		// 	component: './CauHoi/index',
+		//   },
+		//   {
+		// 	path: '/quan-ly/de-thi',
+		// 	name: 'Quản lý đề thi',
+		// 	component: './DeThi/index',
+		//   },
+
+		],
+	  },
+	// DANH MUC HE THONG
+	// {
+	// 	name: 'DanhMuc',
+	// 	path: '/danh-muc',
+	// 	icon: 'copy',
+	// 	routes: [
+	// 		{
+	// 			name: 'ChucVu',
+	// 			path: 'chuc-vu',
+	// 			component: './DanhMuc/ChucVu',
+	// 		},
+	// 	],
+	// },
+
 	{
 		path: '/notification',
 		routes: [
