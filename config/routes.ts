@@ -53,11 +53,11 @@ export default [
 			name: 'Quản lý câu hỏi ',
 			component: './Bai2/Bai2',
 		  },
-		//   {
-		// 	path: '/quan-ly/de-thi',
-		// 	name: 'Quản lý đề thi',
-		// 	component: './DeThi/index',
-		//   },
+		  {
+			path: '/quan-ly/de-thi',
+			name: 'Quản lý đề thi',
+			component: './DeThi/quanlidethi',
+		  },
 
 		],
 	  },

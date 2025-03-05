@@ -2,11 +2,7 @@ import React from 'react';
 import { HomePage } from './homepage';
 
 const Bai2: React.FC = () => {
-  return (
-    <div className="App">
-      <HomePage />
-    </div>
-  );
+  return <HomePage />;
 };
 
 export default Bai2;
