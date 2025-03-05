@@ -25,38 +25,17 @@
 		icon: 'HomeOutlined',
 	},
 	{
-		path: '/gioi-thieu',
-		name: 'About',
-		component: './TienIch/GioiThieu',
-		hideInMenu: true,
-	},
-	{
-		path: '/random-user',
-		name: 'RandomUser',
-		component: './RandomUser',
+		path: '/bai-1',
+		name: 'Bai 1',
+		component: './Bai1/Bai1',
 		icon: 'ArrowsAltOutlined',
 	},
 	{
-		path: '/todo-list',
-		name: 'TodoList',
-		icon: 'OrderedListOutlined',
-		component: './TodoList',
+		path: '/bai-2',
+		name: 'Bai 2',
+		component: './Bai2/Bai2',
+		icon: 'ArrowsAltOutlined',
 	},
-
-	// DANH MUC HE THONG
-	// {
-	// 	name: 'DanhMuc',
-	// 	path: '/danh-muc',
-	// 	icon: 'copy',
-	// 	routes: [
-	// 		{
-	// 			name: 'ChucVu',
-	// 			path: 'chuc-vu',
-	// 			component: './DanhMuc/ChucVu',
-	// 		},
-	// 	],
-	// },
-
 	{
 		path: '/notification',
 		routes: [
