@@ -33,11 +33,74 @@ const MonHoc = () => {
           soTinChi: 3,
           khoiKienThuc: "Cơ sở ngành",
         },
-      ];
-      setMonHocList(data);
-      localStorage.setItem("monHocList", JSON.stringify(data));
-    }
-  }, []);
+        {
+            id: 2,
+            maMon: "CN011", 
+            tenMon: "Lập trình hướng đối tượng", 
+            soTinChi: 3, 
+            khoiKienThuc: "Cơ sở ngành"
+        },
+        {
+            id: 3,
+            maMon: "CS201", 
+            tenMon: "Cấu trúc dữ liệu và giải thuật", 
+            soTinChi: 4, 
+            khoiKienThuc: "Chuyên ngành"
+        },
+        {
+            id: 4,
+            maMon: "CS202", 
+            tenMon: "Cơ sở dữ liệu", 
+            soTinChi: 3, 
+            khoiKienThuc: "Chuyên ngành"
+        },
+        {
+            id: 5,
+            maMon: "CN301", 
+            tenMon: "Mạng máy tính", 
+            soTinChi: 3, 
+            khoiKienThuc: "Chuyên ngành"
+        },
+        {
+            id: 6,
+            maMon: "AI401", 
+            tenMon: "Trí tuệ nhân tạo", 
+            soTinChi: 4, 
+            khoiKienThuc: "Chuyên sâu"
+        },
+        {
+            id: 7,
+            maMon: "WD501", 
+            tenMon: "Phát triển ứng dụng web", 
+            soTinChi: 3, 
+            khoiKienThuc: "Chuyên ngành"
+        },
+        {
+            id: 8,
+            maMon: "AN601", 
+            tenMon: "An ninh mạng", 
+            soTinChi: 3, 
+            khoiKienThuc: "Chuyên sâu"
+        },
+        {
+            id: 9,
+            maMon: "ML701", 
+            tenMon: "Học máy", 
+            soTinChi: 4, 
+            khoiKienThuc: "Chuyên sâu"
+        },
+        {
+            id: 10,
+            maMon: "OS501", 
+            tenMon: "Hệ điều hành", 
+            soTinChi: 3, 
+            khoiKienThuc: "Chuyên ngành"
+        }
+        ];
+        setMonHocList(data);
+        localStorage.setItem("monHocList", JSON.stringify(data));
+      }
+    }, []);
 
   useEffect(() => {
     localStorage.setItem("monHocList", JSON.stringify(monHocList));
