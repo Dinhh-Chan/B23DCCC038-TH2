@@ -30,7 +30,7 @@ export default [
 		path: '/bai-1',
 		name: 'Bai 1',
 		component: './Bai1/Bai1',
-		icon: 'ArrowsAltOutlined',
+		icon: 'RocketOutlined',
 	},
 	{
 		path: '/bai-2',
