@@ -1,217 +1,407 @@
-// src/pages/HomePage.tsx
 import React, { useState, useEffect } from 'react';
-import { Question, DifficultyLevel } from '../../types/question.types';
-import { QuestionForm } from '../../components/question/QuestionForm';
-import { QuestionList } from '../../components/question/QuestionList';
+import { 
+  Button, 
+  Table, 
+  Space, 
+  Modal, 
+  Form, 
+  Input, 
+  Select, 
+  Card, 
+  Row, 
+  Col, 
+  Tag, 
+  Typography, 
+  Spin, 
+  Empty 
+} from 'antd';
+import { Question, DifficultyLevel, MonHoc } from '../../types/question.types';
 import { QuestionService } from '../../services/question/question.service';
+
+const { Title, Text } = Typography;
+const { Option } = Select;
+const { TextArea } = Input;
 
 const questionService = new QuestionService();
 
 export const HomePage: React.FC = () => {
-    const [questions, setQuestions] = useState<Question[]>([]);
-    const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
-    const [isFormOpen, setIsFormOpen] = useState(false);
-    const [filters, setFilters] = useState({
-        subjectId: '',
-        difficulty: '' as DifficultyLevel | '',
-        knowledgeBlock: ''
-    });
-    const [subjects, setSubjects] = useState<string[]>([]);
-    const [knowledgeBlocks, setKnowledgeBlocks] = useState<string[]>([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    subjectId: '',
+    difficulty: '' as DifficultyLevel | '',
+    knowledgeBlock: ''
+  });
+  const [monHocList, setMonHocList] = useState<MonHoc[]>([]);
+  const [knowledgeBlocks, setKnowledgeBlocks] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [form] = Form.useForm();
 
-    useEffect(() => {
-        loadQuestions();
-        loadFilterOptions();
-    }, []);
+  useEffect(() => {
+    loadQuestions();
+    loadFilterOptions();
+  }, []);
 
-    const loadQuestions = () => {
-        const filterParams = {
-            ...(filters.subjectId ? { subjectId: filters.subjectId } : {}),
-            ...(filters.difficulty ? { difficulty: filters.difficulty as DifficultyLevel } : {}),
-            ...(filters.knowledgeBlock ? { knowledgeBlock: filters.knowledgeBlock } : {})
-        };
-        
-        const allQuestions = questionService.searchQuestions(filterParams);
-        setQuestions(allQuestions);
-    };
+  // Hàm kiểm tra trạng thái Modal
+  useEffect(() => {
+    console.log("isFormOpen:", isFormOpen);
+  }, [isFormOpen]);
 
-    const loadFilterOptions = () => {
-        const allQuestions = questionService.searchQuestions({});
+  const loadQuestions = () => {
+    setIsLoading(true);
+    try {
+      const filterParams = {
+        ...(filters.subjectId ? { subjectId: filters.subjectId } : {}),
+        ...(filters.difficulty ? { difficulty: filters.difficulty as DifficultyLevel } : {}),
+        ...(filters.knowledgeBlock ? { knowledgeBlock: filters.knowledgeBlock } : {})
+      };
+      
+      const allQuestions = questionService.searchQuestions(filterParams);
+      setQuestions(allQuestions);
+    } catch (error) {
+      console.error('Lỗi khi tải câu hỏi:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadFilterOptions = () => {
+    try {
+      // Lấy danh sách môn học từ localStorage
+      const monHocData = localStorage.getItem('monHocList');
+      if (monHocData) {
+        const monHocArr: MonHoc[] = JSON.parse(monHocData);
+        setMonHocList(monHocArr);
         
-        // Lấy danh sách môn học
-        const uniqueSubjects = [...new Set(allQuestions.map(q => q.subjectId))];
-        setSubjects(uniqueSubjects);
-        
-        // Lấy danh sách khối kiến thức
-        const uniqueKnowledgeBlocks = [...new Set(allQuestions.map(q => q.knowledgeBlock))];
+        // Lấy danh sách khối kiến thức từ dữ liệu môn học
+        const uniqueKnowledgeBlocks = [...new Set(monHocArr.map(mh => mh.khoiKienThuc))].filter(Boolean);
         setKnowledgeBlocks(uniqueKnowledgeBlocks);
-    };
+      } else {
+        setMonHocList([]);
+        setKnowledgeBlocks([]);
+      }
+    } catch (error) {
+      console.error('Lỗi khi tải tùy chọn lọc:', error);
+    }
+  };
 
-    const handleAddNew = () => {
-        setSelectedQuestion(null);
-        setIsFormOpen(true);
-    };
+  // Cập nhật hàm handleAddNew để đảm bảo form hiển thị
+  const handleAddNew = () => {
+    console.log("Đang mở form thêm mới");
+    setSelectedQuestion(null);
+    form.resetFields();
+    setIsFormOpen(true);
+  };
 
-    const handleEdit = (question: Question) => {
-        setSelectedQuestion(question);
-        setIsFormOpen(true);
-    };
+  const handleEdit = (question: Question) => {
+    setSelectedQuestion(question);
+    form.setFieldsValue({
+      content: question.content,
+      subjectId: question.subjectId,
+      difficulty: question.difficulty,
+      knowledgeBlock: question.knowledgeBlock
+    });
+    setIsFormOpen(true);
+  };
 
-    const handleDelete = async (id: string) => {
-        if (window.confirm('Bạn có chắc chắn muốn xóa câu hỏi này?')) {
-            questionService.deleteQuestion(id);
-            loadQuestions();
-            loadFilterOptions();
+  const handleDelete = (id: string) => {
+    Modal.confirm({
+      title: 'Xác nhận xóa',
+      content: 'Bạn có chắc chắn muốn xóa câu hỏi này?',
+      okText: 'Xóa',
+      okType: 'danger',
+      cancelText: 'Hủy',
+      onOk() {
+        try {
+          questionService.deleteQuestion(id);
+          loadQuestions();
+        } catch (error) {
+          console.error('Lỗi khi xóa câu hỏi:', error);
+          Modal.error({
+            title: 'Lỗi',
+            content: 'Không thể xóa câu hỏi. Vui lòng thử lại sau.'
+          });
         }
-    };
+      }
+    });
+  };
 
-    const handleSubmit = (data: Partial<Question>) => {
-        if (selectedQuestion) {
-            questionService.updateQuestion(selectedQuestion.id, data);
-        } else {
-            questionService.createQuestion(data as Omit<Question, 'id' | 'createdAt' | 'updatedAt'>);
-        }
-        setIsFormOpen(false);
-        loadQuestions();
-        loadFilterOptions();
-    };
+  const handleSubmit = (values: any) => {
+    try {
+      if (selectedQuestion) {
+        questionService.updateQuestion(selectedQuestion.id, values);
+      } else {
+        questionService.createQuestion(values as Omit<Question, 'id' | 'createdAt' | 'updatedAt'>);
+      }
+      setIsFormOpen(false);
+      loadQuestions();
+    } catch (error) {
+      console.error('Lỗi khi lưu câu hỏi:', error);
+      Modal.error({
+        title: 'Lỗi',
+        content: 'Không thể lưu câu hỏi. Vui lòng thử lại sau.'
+      });
+    }
+  };
 
-    const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setFilters(prev => ({ ...prev, [name]: value }));
-    };
+  const handleFilterChange = (name: string, value: string) => {
+    setFilters(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
-    const applyFilters = () => {
-        loadQuestions();
-    };
+  const resetFilters = () => {
+    setFilters({
+      subjectId: '',
+      difficulty: '',
+      knowledgeBlock: ''
+    });
+    setTimeout(() => {
+      loadQuestions();
+    }, 0);
+  };
 
-    const resetFilters = () => {
-        setFilters({
-            subjectId: '',
-            difficulty: '',
-            knowledgeBlock: ''
-        });
-        loadQuestions();
-    };
+  const applyFilters = () => {
+    loadQuestions();
+  };
 
-    return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold">Quản lý câu hỏi</h1>
-                <button
-                    onClick={handleAddNew}
-                    className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-                >
-                    Thêm câu hỏi mới
-                </button>
-            </div>
+  // Định nghĩa cột cho bảng
+  const columns = [
+    {
+      title: 'Nội dung',
+      dataIndex: 'content',
+      key: 'content',
+      ellipsis: {
+        showTitle: false,
+      },
+      render: (content: string) => (
+        <Text ellipsis={{ tooltip: content }} style={{ maxWidth: 300 }}>
+          {content}
+        </Text>
+      )
+    },
+    {
+      title: 'Môn học',
+      dataIndex: 'subjectId',
+      key: 'subjectId',
+    },
+    {
+      title: 'Độ khó',
+      dataIndex: 'difficulty',
+      key: 'difficulty',
+      render: (text: string) => {
+        let color = 'green';
+        if (text === DifficultyLevel.MEDIUM) color = 'blue';
+        else if (text === DifficultyLevel.HARD) color = 'orange';
+        else if (text === DifficultyLevel.VERY_HARD) color = 'red';
+        
+        return (
+          <Tag color={color}>{text}</Tag>
+        );
+      }
+    },
+    {
+      title: 'Khối kiến thức',
+      dataIndex: 'knowledgeBlock',
+      key: 'knowledgeBlock',
+    },
+    {
+      title: 'Ngày cập nhật',
+      dataIndex: 'updatedAt',
+      key: 'updatedAt',
+      render: (date: Date) => new Date(date).toLocaleDateString('vi-VN')
+    },
+    {
+      title: 'Thao tác',
+      key: 'action',
+      render: (_: any, record: Question) => (
+        <Space size="middle">
+          <Button type="link" onClick={() => handleEdit(record)}>Sửa</Button>
+          <Button type="link" danger onClick={() => handleDelete(record.id)}>Xóa</Button>
+        </Space>
+      ),
+    },
+  ];
 
-            {/* Bộ lọc */}
-            <div className="bg-white p-4 rounded-lg shadow mb-6">
-                <h2 className="text-lg font-semibold mb-3">Tìm kiếm và lọc</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Môn học
-                        </label>
-                        <select
-                            name="subjectId"
-                            value={filters.subjectId}
-                            onChange={handleFilterChange}
-                            className="w-full rounded-md border-gray-300 shadow-sm"
-                        >
-                            <option value="">Tất cả môn học</option>
-                            {subjects.map(subject => (
-                                <option key={subject} value={subject}>{subject}</option>
-                            ))}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Mức độ khó
-                        </label>
-                        <select
-                            name="difficulty"
-                            value={filters.difficulty}
-                            onChange={handleFilterChange}
-                            className="w-full rounded-md border-gray-300 shadow-sm"
-                        >
-                            <option value="">Tất cả mức độ</option>
-                            {Object.values(DifficultyLevel).map(level => (
-                                <option key={level} value={level}>{level}</option>
-                            ))}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Khối kiến thức
-                        </label>
-                        <select
-                            name="knowledgeBlock"
-                            value={filters.knowledgeBlock}
-                            onChange={handleFilterChange}
-                            className="w-full rounded-md border-gray-300 shadow-sm"
-                        >
-                            <option value="">Tất cả khối kiến thức</option>
-                            {knowledgeBlocks.map(block => (
-                                <option key={block} value={block}>{block}</option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-                <div className="flex justify-end mt-4 space-x-2">
-                    <button
-                        onClick={resetFilters}
-                        className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
-                    >
-                        Đặt lại
-                    </button>
-                    <button
-                        onClick={applyFilters}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                    >
-                        Áp dụng
-                    </button>
-                </div>
-            </div>
+  return (
+    <div style={{ padding: '24px' }}>
+      <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+        <Title level={2}>Quản lý ngân hàng câu hỏi</Title>
+        <Button type="primary" size="large" onClick={handleAddNew}>
+          Thêm câu hỏi
+        </Button>
+      </Row>
 
-            {/* Thông tin số lượng */}
-            <div className="mb-4">
-                <p className="text-gray-600">Tổng số câu hỏi: {questions.length}</p>
-            </div>
+      <Card title="Bộ lọc câu hỏi" style={{ marginBottom: 16 }}>
+        <Row gutter={16}>
+          <Col span={8}>
+            <Form.Item label="Môn học">
+              <Select
+                value={filters.subjectId}
+                onChange={(value) => handleFilterChange('subjectId', value)}
+                style={{ width: '100%' }}
+                placeholder="Tất cả môn học"
+                allowClear
+              >
+                {monHocList.map(monHoc => (
+                  <Option key={monHoc.id} value={monHoc.tenMon}>{monHoc.tenMon}</Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+          <Col span={8}>
+            <Form.Item label="Mức độ khó">
+              <Select
+                value={filters.difficulty}
+                onChange={(value) => handleFilterChange('difficulty', value)}
+                style={{ width: '100%' }}
+                placeholder="Tất cả mức độ"
+                allowClear
+              >
+                {Object.values(DifficultyLevel).map(level => (
+                  <Option key={level} value={level}>{level}</Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+          <Col span={8}>
+            <Form.Item label="Khối kiến thức">
+              <Select
+                value={filters.knowledgeBlock}
+                onChange={(value) => handleFilterChange('knowledgeBlock', value)}
+                style={{ width: '100%' }}
+                placeholder="Tất cả khối kiến thức"
+                allowClear
+              >
+                {knowledgeBlocks.map(block => (
+                  <Option key={block} value={block}>{block}</Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+        </Row>
+        <Row justify="end">
+          <Space>
+            <Button onClick={resetFilters}>Đặt lại</Button>
+            <Button type="primary" onClick={applyFilters}>Áp dụng</Button>
+          </Space>
+        </Row>
+      </Card>
 
-            {isFormOpen && (
-                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white p-6 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                        <h2 className="text-xl font-bold mb-4">
-                            {selectedQuestion ? 'Sửa câu hỏi' : 'Thêm câu hỏi mới'}
-                        </h2>
-                        <QuestionForm
-                            initialData={selectedQuestion || undefined}
-                            onSubmit={handleSubmit}
-                            onCancel={() => setIsFormOpen(false)}
-                        />
-                    </div>
-                </div>
-            )}
+      <Card style={{ marginBottom: 16 }}>
+        <Row justify="space-between" align="middle">
+          <Text>Tổng số câu hỏi: <Text strong>{questions.length}</Text></Text>
+          {(filters.subjectId || filters.difficulty || filters.knowledgeBlock) && (
+            <Text type="secondary">
+              Đang lọc theo: {filters.subjectId && <span style={{ marginRight: 8 }}>Môn học: {filters.subjectId}</span>}
+              {filters.difficulty && <span style={{ marginRight: 8 }}>Độ khó: {filters.difficulty}</span>}
+              {filters.knowledgeBlock && <span>Khối kiến thức: {filters.knowledgeBlock}</span>}
+            </Text>
+          )}
+        </Row>
+      </Card>
 
-            {questions.length > 0 ? (
-                <QuestionList
-                    questions={questions}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                />
-            ) : (
-                <div className="bg-white p-8 rounded-lg shadow text-center">
-                    <p className="text-gray-500 text-lg">Không tìm thấy câu hỏi nào</p>
-                    <button
-                        onClick={handleAddNew}
-                        className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                    >
-                        Thêm câu hỏi đầu tiên
-                    </button>
-                </div>
-            )}
-        </div>
-    );
+      <Spin spinning={isLoading}>
+        {questions.length > 0 ? (
+          <Table 
+            columns={columns} 
+            dataSource={questions} 
+            rowKey="id"
+            pagination={{ pageSize: 10 }}
+          />
+        ) : (
+          <Card>
+            <Empty
+              description="Không tìm thấy câu hỏi nào"
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+            >
+              <Button type="primary" onClick={handleAddNew}>
+                Thêm câu hỏi đầu tiên
+              </Button>
+            </Empty>
+          </Card>
+        )}
+      </Spin>
+
+      {/* Đảm bảo Modal hiển thị khi isFormOpen = true */}
+      <Modal
+        title={selectedQuestion ? 'Sửa câu hỏi' : 'Thêm câu hỏi mới'}
+        visible={isFormOpen} // Đối với Ant Design phiên bản dưới 4.23.0
+        // open={isFormOpen} // Đối với Ant Design phiên bản từ 4.23.0 trở lên
+        onCancel={() => setIsFormOpen(false)}
+        footer={null}
+        width={800}
+        destroyOnClose={true}
+        maskClosable={false}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          initialValues={{
+            difficulty: DifficultyLevel.MEDIUM
+          }}
+        >
+          <Form.Item
+            name="content"
+            label="Nội dung câu hỏi"
+            rules={[{ required: true, message: 'Vui lòng nhập nội dung câu hỏi' }]}
+          >
+            <TextArea rows={4} placeholder="Nhập nội dung câu hỏi..." />
+          </Form.Item>
+
+          <Form.Item
+            name="subjectId"
+            label="Môn học"
+            rules={[{ required: true, message: 'Vui lòng chọn môn học' }]}
+          >
+            <Select placeholder="Chọn môn học">
+              {monHocList.map(monHoc => (
+                <Option key={monHoc.id} value={monHoc.tenMon}>{monHoc.tenMon}</Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="difficulty"
+            label="Mức độ khó"
+            rules={[{ required: true, message: 'Vui lòng chọn mức độ khó' }]}
+          >
+            <Select placeholder="Chọn mức độ khó">
+              {Object.values(DifficultyLevel).map(level => (
+                <Option key={level} value={level}>{level}</Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="knowledgeBlock"
+            label="Khối kiến thức"
+            rules={[{ required: true, message: 'Vui lòng chọn khối kiến thức' }]}
+          >
+            <Select placeholder="Chọn khối kiến thức">
+              {knowledgeBlocks.map(block => (
+                <Option key={block} value={block}>{block}</Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item>
+            <Row justify="end">
+              <Space>
+                <Button onClick={() => setIsFormOpen(false)}>
+                  Hủy
+                </Button>
+                <Button type="primary" htmlType="submit">
+                  {selectedQuestion ? 'Cập nhật' : 'Thêm mới'}
+                </Button>
+              </Space>
+            </Row>
+          </Form.Item>
+        </Form>
+      </Modal>
+    </div>
+  );
 };

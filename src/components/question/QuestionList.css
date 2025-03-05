@@ -1,0 +1,85 @@
+/* src/components/QuestionList.css */
+
+.overflow-x-auto {
+    overflow-x: auto;
+}
+
+.min-w-full {
+    min-width: 100%;
+}
+
+.divide-y {
+    border-bottom-width: 1px;
+}
+
+.divide-gray-200 {
+    border-color: #e5e7eb;
+}
+
+.bg-gray-50 {
+    background-color: #f9fafb;
+}
+
+.px-6 {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+}
+
+.py-3 {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+}
+
+.text-left {
+    text-align: left;
+}
+
+.text-xs {
+    font-size: 0.75rem;
+    line-height: 1rem;
+}
+
+.font-medium {
+    font-weight: 500;
+}
+
+.text-gray-500 {
+    color: #6b7280;
+}
+
+.uppercase {
+    text-transform: uppercase;
+}
+
+.bg-white {
+    background-color: #ffffff;
+}
+
+.py-4 {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.whitespace-normal {
+    white-space: normal;
+}
+
+.text-blue-600 {
+    color: #2563eb;
+}
+
+.hover\:text-blue-900:hover {
+    color: #1e40af;
+}
+
+.mr-2 {
+    margin-right: 0.5rem;
+}
+
+.text-red-600 {
+    color: #dc2626;
+}
+
+.hover\:text-red-900:hover {
+    color: #b91c1c;
+}

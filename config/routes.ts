@@ -48,11 +48,11 @@ export default [
 			name: 'Quản lý môn học',
 			component: './MonHoc/MonHoc',
 		  },
-		//   {
-		// 	path: '/quan-ly/cau-hoi',
-		// 	name: 'Quản lý câu hỏi ',
-		// 	component: './CauHoi/index',
-		//   },
+		  {
+			path: '/quan-ly/cau-hoi',
+			name: 'Quản lý câu hỏi ',
+			component: './Bai2/Bai2',
+		  },
 		//   {
 		// 	path: '/quan-ly/de-thi',
 		// 	name: 'Quản lý đề thi',
