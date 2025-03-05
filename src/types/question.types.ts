@@ -22,3 +22,10 @@ export interface Question {
     createdAt: Date;
     updatedAt: Date;
 }
+export interface MonHoc {
+    id: number;
+    maMon: string;
+    tenMon: string;
+    soTinChi: number;
+    khoiKienThuc: string;
+}

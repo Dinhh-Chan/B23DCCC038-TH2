@@ -1,7 +1,7 @@
 // src/components/QuestionList.tsx
 import React from 'react';
 import { Question, DifficultyLevel } from '../../types/question.types';
-
+import './QuestionList.css';
 interface QuestionListProps {
     questions: Question[];
     onEdit: (question: Question) => void;
