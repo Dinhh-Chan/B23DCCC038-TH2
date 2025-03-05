@@ -37,16 +37,32 @@ export const HomePage: React.FC = () => {
   const [knowledgeBlocks, setKnowledgeBlocks] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [form] = Form.useForm();
+  const [selectedSubject, setSelectedSubject] = useState<MonHoc | null>(null);
 
   useEffect(() => {
     loadQuestions();
     loadFilterOptions();
   }, []);
 
-  // Hàm kiểm tra trạng thái Modal
+  // Theo dõi thay đổi của subjectId trong form
   useEffect(() => {
-    console.log("isFormOpen:", isFormOpen);
-  }, [isFormOpen]);
+    const subjectId = form.getFieldValue('subjectId');
+    
+    if (subjectId) {
+      const subject = monHocList.find(m => m.tenMon === subjectId);
+      setSelectedSubject(subject || null);
+      
+      // Nếu đã chọn môn học, tự động cập nhật khối kiến thức
+      if (subject) {
+        form.setFieldsValue({ knowledgeBlock: subject.khoiKienThuc });
+      } else {
+        form.setFieldsValue({ knowledgeBlock: '' });
+      }
+    } else {
+      setSelectedSubject(null);
+      form.setFieldsValue({ knowledgeBlock: '' });
+    }
+  }, [form.getFieldValue('subjectId'), monHocList]);
 
   const loadQuestions = () => {
     setIsLoading(true);
@@ -86,7 +102,6 @@ export const HomePage: React.FC = () => {
     }
   };
 
-  // Cập nhật hàm handleAddNew để đảm bảo form hiển thị
   const handleAddNew = () => {
     console.log("Đang mở form thêm mới");
     setSelectedQuestion(null);
@@ -96,6 +111,11 @@ export const HomePage: React.FC = () => {
 
   const handleEdit = (question: Question) => {
     setSelectedQuestion(question);
+    
+    // Tìm môn học tương ứng từ ID
+    const subject = monHocList.find(m => m.tenMon === question.subjectId);
+    setSelectedSubject(subject || null);
+    
     form.setFieldsValue({
       content: question.content,
       subjectId: question.subjectId,
@@ -146,10 +166,7 @@ export const HomePage: React.FC = () => {
   };
 
   const handleFilterChange = (name: string, value: string) => {
-    setFilters(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFilters(prev => ({ ...prev, [name]: value }));
   };
 
   const resetFilters = () => {
@@ -158,84 +175,95 @@ export const HomePage: React.FC = () => {
       difficulty: '',
       knowledgeBlock: ''
     });
-    setTimeout(() => {
-      loadQuestions();
-    }, 0);
   };
 
   const applyFilters = () => {
     loadQuestions();
   };
 
-  // Định nghĩa cột cho bảng
+  const handleSubjectChange = (value: string) => {
+    // Tìm môn học được chọn
+    const subject = monHocList.find(m => m.tenMon === value);
+    setSelectedSubject(subject || null);
+    
+    // Cập nhật form để sử dụng khối kiến thức của môn học
+    if (subject) {
+      form.setFieldsValue({ knowledgeBlock: subject.khoiKienThuc });
+    } else {
+      form.setFieldsValue({ knowledgeBlock: '' });
+    }
+  };
+
   const columns = [
     {
       title: 'Nội dung',
       dataIndex: 'content',
       key: 'content',
-      ellipsis: {
-        showTitle: false,
-      },
-      render: (content: string) => (
-        <Text ellipsis={{ tooltip: content }} style={{ maxWidth: 300 }}>
-          {content}
-        </Text>
+      width: '40%',
+      render: (text: string) => (
+        <div style={{ maxHeight: '100px', overflow: 'auto' }}>
+          {text}
+        </div>
       )
     },
     {
       title: 'Môn học',
       dataIndex: 'subjectId',
       key: 'subjectId',
-    },
-    {
-      title: 'Độ khó',
-      dataIndex: 'difficulty',
-      key: 'difficulty',
-      render: (text: string) => {
-        let color = 'green';
-        if (text === DifficultyLevel.MEDIUM) color = 'blue';
-        else if (text === DifficultyLevel.HARD) color = 'orange';
-        else if (text === DifficultyLevel.VERY_HARD) color = 'red';
-        
-        return (
-          <Tag color={color}>{text}</Tag>
-        );
-      }
+      width: '15%'
     },
     {
       title: 'Khối kiến thức',
       dataIndex: 'knowledgeBlock',
       key: 'knowledgeBlock',
+      width: '15%'
     },
     {
-      title: 'Ngày cập nhật',
-      dataIndex: 'updatedAt',
-      key: 'updatedAt',
-      render: (date: Date) => new Date(date).toLocaleDateString('vi-VN')
+      title: 'Độ khó',
+      dataIndex: 'difficulty',
+      key: 'difficulty',
+      width: '10%',
+      render: (difficulty: DifficultyLevel) => {
+        let color = 'green';
+        if (difficulty === DifficultyLevel.MEDIUM) {
+          color = 'orange';
+        } else if (difficulty === DifficultyLevel.HARD) {
+          color = 'red';
+        }
+        return (
+          <Tag color={color}>{difficulty}</Tag>
+        );
+      }
     },
     {
       title: 'Thao tác',
       key: 'action',
-      render: (_: any, record: Question) => (
+      width: '15%',
+      render: (text: string, record: Question) => (
         <Space size="middle">
-          <Button type="link" onClick={() => handleEdit(record)}>Sửa</Button>
-          <Button type="link" danger onClick={() => handleDelete(record.id)}>Xóa</Button>
+          <Button type="link" onClick={() => handleEdit(record)}>
+            Sửa
+          </Button>
+          <Button type="link" danger onClick={() => handleDelete(record.id)}>
+            Xóa
+          </Button>
         </Space>
       ),
     },
   ];
 
   return (
-    <div style={{ padding: '24px' }}>
-      <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
-        <Title level={2}>Quản lý ngân hàng câu hỏi</Title>
-        <Button type="primary" size="large" onClick={handleAddNew}>
-          Thêm câu hỏi
+    <div className="question-bank-container" style={{ padding: '20px' }}>
+      <Title level={2}>Ngân hàng câu hỏi</Title>
+
+      <Row justify="end" style={{ marginBottom: 16 }}>
+        <Button type="primary" onClick={handleAddNew}>
+          Thêm câu hỏi mới
         </Button>
       </Row>
 
-      <Card title="Bộ lọc câu hỏi" style={{ marginBottom: 16 }}>
-        <Row gutter={16}>
+      <Card style={{ marginBottom: 16 }}>
+        <Row gutter={[16, 16]}>
           <Col span={8}>
             <Form.Item label="Môn học">
               <Select
@@ -252,7 +280,7 @@ export const HomePage: React.FC = () => {
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item label="Mức độ khó">
+            <Form.Item label="Độ khó">
               <Select
                 value={filters.difficulty}
                 onChange={(value) => handleFilterChange('difficulty', value)}
@@ -325,11 +353,9 @@ export const HomePage: React.FC = () => {
         )}
       </Spin>
 
-      {/* Đảm bảo Modal hiển thị khi isFormOpen = true */}
       <Modal
         title={selectedQuestion ? 'Sửa câu hỏi' : 'Thêm câu hỏi mới'}
-        visible={isFormOpen} // Đối với Ant Design phiên bản dưới 4.23.0
-        // open={isFormOpen} // Đối với Ant Design phiên bản từ 4.23.0 trở lên
+        visible={isFormOpen} 
         onCancel={() => setIsFormOpen(false)}
         footer={null}
         width={800}
@@ -357,7 +383,10 @@ export const HomePage: React.FC = () => {
             label="Môn học"
             rules={[{ required: true, message: 'Vui lòng chọn môn học' }]}
           >
-            <Select placeholder="Chọn môn học">
+            <Select 
+              placeholder="Chọn môn học" 
+              onChange={handleSubjectChange}
+            >
               {monHocList.map(monHoc => (
                 <Option key={monHoc.id} value={monHoc.tenMon}>{monHoc.tenMon}</Option>
               ))}
@@ -381,10 +410,15 @@ export const HomePage: React.FC = () => {
             label="Khối kiến thức"
             rules={[{ required: true, message: 'Vui lòng chọn khối kiến thức' }]}
           >
-            <Select placeholder="Chọn khối kiến thức">
-              {knowledgeBlocks.map(block => (
-                <Option key={block} value={block}>{block}</Option>
-              ))}
+            <Select 
+              placeholder="Chọn khối kiến thức"
+              disabled={!selectedSubject}
+            >
+              {selectedSubject && (
+                <Option value={selectedSubject.khoiKienThuc}>
+                  {selectedSubject.khoiKienThuc}
+                </Option>
+              )}
             </Select>
           </Form.Item>
 
@@ -405,3 +439,5 @@ export const HomePage: React.FC = () => {
     </div>
   );
 };
+
+export default HomePage;

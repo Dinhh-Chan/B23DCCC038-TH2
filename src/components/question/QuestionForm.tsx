@@ -1,103 +1,131 @@
-// src/components/QuestionForm.tsx
-import React, { useState } from 'react';
-import { Question, DifficultyLevel } from '../../types/question.types';
-import './QuestionForm.css';
+import React, { useState, useEffect } from 'react';
+import { Question, DifficultyLevel, MonHoc } from '../../types/question.types';
+
 interface QuestionFormProps {
-    initialData?: Question;
-    onSubmit: (data: Partial<Question>) => void;
-    onCancel: () => void;
+  initialQuestion?: Question;
+  subjects: MonHoc[]; // Sử dụng kiểu dữ liệu MonHoc
+  onSubmit: (question: Omit<Question, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  onCancel: () => void;
 }
 
 export const QuestionForm: React.FC<QuestionFormProps> = ({
-    initialData,
-    onSubmit,
-    onCancel
+  initialQuestion,
+  subjects,
+  onSubmit,
+  onCancel
 }) => {
-    const [formData, setFormData] = useState({
-        content: initialData?.content || '',
-        subjectId: initialData?.subjectId || '',
-        difficulty: initialData?.difficulty || DifficultyLevel.MEDIUM,
-        knowledgeBlock: initialData?.knowledgeBlock || ''
+  const [content, setContent] = useState(initialQuestion?.content || '');
+  const [subjectId, setSubjectId] = useState(initialQuestion?.subjectId || '');
+  const [difficulty, setDifficulty] = useState(initialQuestion?.difficulty || DifficultyLevel.EASY);
+  
+  // State để lưu trữ môn học đã chọn
+  const [selectedSubject, setSelectedSubject] = useState<MonHoc | null>(null);
+  
+  // Cập nhật môn học được chọn khi subjectId thay đổi
+  useEffect(() => {
+    if (subjectId) {
+      const foundSubject = subjects.find(s => s.id.toString() === subjectId.toString());
+      setSelectedSubject(foundSubject || null);
+    } else {
+      setSelectedSubject(null);
+    }
+  }, [subjectId, subjects]);
+  
+  const handleSubjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setSubjectId(value);
+  };
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!subjectId) {
+      alert('Vui lòng chọn môn học!');
+      return;
+    }
+    
+    if (!selectedSubject) {
+      alert('Không tìm thấy thông tin môn học!');
+      return;
+    }
+    
+    // Tự động lấy khối kiến thức từ môn học đã chọn
+    onSubmit({
+      content,
+      subjectId,
+      difficulty,
+      knowledgeBlock: selectedSubject.khoiKienThuc
     });
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        onSubmit(formData);
-    };
-
-    return (
-        <form onSubmit={handleSubmit} className="space-y-4 p-4 bg-white rounded-lg shadow">
-            <div>
-                <label className="block text-sm font-medium text-gray-700">
-                    Nội dung câu hỏi
-                </label>
-                <textarea
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                    value={formData.content}
-                    onChange={(e) => setFormData({...formData, content: e.target.value})}
-                    required
-                />
-            </div>
-
-            <div>
-                <label className="block text-sm font-medium text-gray-700">
-                    Mã môn học
-                </label>
-                <input
-                    type="text"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                    value={formData.subjectId}
-                    onChange={(e) => setFormData({...formData, subjectId: e.target.value})}
-                    required
-                />
-            </div>
-
-            <div>
-                <label className="block text-sm font-medium text-gray-700">
-                    Mức độ khó
-                </label>
-                <select
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                    value={formData.difficulty}
-                    onChange={(e) => setFormData({
-                        ...formData, 
-                        difficulty: e.target.value as DifficultyLevel
-                    })}
-                >
-                    {Object.values(DifficultyLevel).map(level => (
-                        <option key={level} value={level}>{level}</option>
-                    ))}
-                </select>
-            </div>
-
-            <div>
-                <label className="block text-sm font-medium text-gray-700">
-                    Khối kiến thức
-                </label>
-                <input
-                    type="text"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                    value={formData.knowledgeBlock}
-                    onChange={(e) => setFormData({...formData, knowledgeBlock: e.target.value})}
-                    required
-                />
-            </div>
-
-            <div className="flex justify-end space-x-2">
-                <button
-                    type="button"
-                    onClick={onCancel}
-                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
-                >
-                    Hủy
-                </button>
-                <button
-                    type="submit"
-                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                >
-                    {initialData ? 'Cập nhật' : 'Thêm mới'}
-                </button>
-            </div>
-        </form>
-    );
+  };
+  
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Nội dung câu hỏi
+        </label>
+        <textarea
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+          rows={4}
+          required
+        />
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Môn học
+        </label>
+        <select
+          value={subjectId}
+          onChange={handleSubjectChange}
+          className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+          required
+        >
+          <option value="">-- Chọn môn học --</option>
+          {subjects.map((subject) => (
+            <option key={subject.id} value={subject.id}>
+              {subject.tenMon}
+            </option>
+          ))}
+        </select>
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Độ khó
+        </label>
+        <select
+          value={difficulty}
+          onChange={(e) => setDifficulty(e.target.value as DifficultyLevel)}
+          className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+          required
+        >
+          {Object.values(DifficultyLevel).map((level) => (
+            <option key={level} value={level}>
+              {level}
+            </option>
+          ))}
+        </select>
+      </div>
+      
+      <div className="flex justify-end space-x-2">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-4 py-2 border border-gray-300 rounded-md text-gray-700"
+        >
+          Hủy
+        </button>
+        <button
+          type="submit"
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          disabled={!subjectId}
+        >
+          {initialQuestion ? 'Cập nhật' : 'Tạo mới'}
+        </button>
+      </div>
+    </form>
+  );
 };

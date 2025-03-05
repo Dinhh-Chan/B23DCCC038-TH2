@@ -33,12 +33,6 @@ export default [
 		icon: 'RocketOutlined',
 	},
 	{
-		path: '/bai-2',
-		name: 'Bai 2',
-		component: './Bai2/Bai2',
-		icon: 'ArrowsAltOutlined',
-	},
-	{
 		path: '/quan-ly',
 		name: 'Bài 2',
 		icon: 'UnorderedListOutlined',
