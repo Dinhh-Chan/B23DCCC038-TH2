@@ -5,9 +5,9 @@ import "./Bai1.css";
 
 const choices = ["Kéo", "Búa", "Bao"];
 const images = {
-  Kéo: "https://cdn-icons-png.flaticon.com/128/3076/3076104.png",
-  Búa: "https://cdn-icons-png.flaticon.com/128/3076/3076102.png",
-  Bao: "https://cdn-icons-png.flaticon.com/128/3076/3076103.png",
+  Kéo: "https://static.vecteezy.com/system/resources/previews/014/411/773/original/hand-with-victory-sign-icon-simple-style-vector.jpg",
+  Búa: "https://img.freepik.com/premium-vector/fist-hand-vector-silhouette-illustration-black-color-17_554682-5958.jpg",
+  Bao: "https://cdn-icons-png.flaticon.com/512/1309/1309617.png",
 };
 
 const getResult = (player: string, computer: string) => {
@@ -115,8 +115,15 @@ const App: React.FC = () => {
         ]}
       >
         {renderModalContent()}
+        {playerChoice && computerChoice && (
+        <div className="result" style={{ textAlign: 'center' }}>
+          <Typography.Title level={3}>
+            Bạn chọn: {playerChoice} | Máy chọn: {computerChoice}
+          </Typography.Title>
+          <Typography.Text strong>{result}</Typography.Text>
+        </div>
+      )}
       </Modal>
-
       {playerChoice && computerChoice && (
         <div className="result">
           <Typography.Title level={3}>
@@ -125,6 +132,7 @@ const App: React.FC = () => {
           <Typography.Text strong>{result}</Typography.Text>
         </div>
       )}
+      
     </div>
   );
 };
